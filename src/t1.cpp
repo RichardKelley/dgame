@@ -1,3 +1,4 @@
+//#include <smpl/smpl.h>
 #include "automaton.h"
 
 int main()
@@ -8,7 +9,7 @@ int main()
 
   label_c l2(SIDEWALK);
   timed_word_c tw(1, l2);
-  //tw.print();
+  tw.print();
   auto c = abar.get_cost(tw);
   c.print();
   return 0;
