@@ -12,6 +12,9 @@ class label_c{
     label_c() {};
     label_c(symbol s_) : s(s_){
     }
+    void insert(const size_t w){
+      s = s | (1<<w);
+    }
     void insert(const label_c& l){
       s = s | l.s;
     }
@@ -21,13 +24,13 @@ class label_c{
     void remove(const size_t w){
       s = s ^ (1<<w);
     }
-    label_c minus(const label_c& l){
+    label_c minus(const label_c& l) const{
       return label_c(s ^ l.s);
     }
-    label_c intersect(const label_c& l){
+    label_c intersect(const label_c& l) const{
       return label_c(s & l.s);
     }
-    bool is_subset(const label_c& l){
+    bool is_subset(const label_c& l) const{
       return !!(s & l.s);
     }
     friend bool operator<(const label_c& a, const label_c& b){
@@ -40,7 +43,7 @@ class label_c{
       return (s != l.s);
     }
     void print(){
-      for(size_t i=7; i>=0; i--)
+      for(int i=7; i>=0; i--)
         cout<< !!(s & (1<<i));
       cout<<endl;
     }
@@ -55,7 +58,7 @@ class cost_c{
       c = vector<float>(dim,0);
     }
     cost_c(vector<float>& c_) : c(c_) {}
-    cost_c(cost_c<dim>& c2){
+    cost_c(const cost_c<dim>& c2){
       c = c2.c;
     }
     cost_c operator+(const cost_c& c2){
@@ -77,6 +80,12 @@ class cost_c{
       }
       return true;
     }
+    void print(){
+      cout<<"(";
+      for(auto& ci : c)
+        cout<<ci<<",";
+      cout<<")"<<endl;
+    }
 };
 
 class timed_word_c{
@@ -91,7 +100,7 @@ class timed_word_c{
       label = tw.label;
     }
     void print(){
-      cout<<"tw: "<< dt;
+      cout<<"tw: "<< dt<<" ";
       label.print();
     }
 };
@@ -109,7 +118,7 @@ class automaton_ss_c{
       is_positive(is_positive_), label(label_), weight(weight_), cost(cost_){
       }
 
-    float get_cost(const timed_word_c& tw){
+    float get_cost(const timed_word_c& tw) const{
       if( (label.is_subset(tw.label) && is_positive) ||
           (!label.is_subset(tw.label) && !is_positive))
         return 0;
@@ -125,22 +134,19 @@ class automaton_ss_c{
 template<size_t max_priority>
 class automaton_product{
   public:
-    set< pair<size_t, automaton_ss_c> > rules;
+    set<pair<size_t, automaton_ss_c> > rules;
 
     int insert(const automaton_ss_c& psi, size_t p){
       assert(p <= max_priority);
       auto pp = make_pair(p, psi);
-      if(rules.find(pp) != rules.end()){
-        rules.insert(pp);
-        return 0;
-      }
-      return 1;
+      rules.insert(pp);
+      return 0;
     };
 
     cost_c<max_priority+2> get_cost(const timed_word_c& tw){
       cost_c<max_priority+2> cost;
       for(auto& ppsi : rules){
-        automaton_ss_c& psi = ppsi.second;
+        auto& psi = ppsi.second;
         float t1 = psi.get_cost(tw);
         cost.c[ppsi.first] += t1;  
       }
