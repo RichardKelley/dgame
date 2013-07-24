@@ -2,14 +2,14 @@
 #define __automaton_h__
 
 #include "utils.h"
-#include "driving.h"
 
 class label_c{
   public:
     const static size_t len = 8;
     symbol s;
 
-    label_c() {};
+    label_c() : s(0){
+    };
     label_c(symbol s_) : s(s_){
     }
     void insert(const size_t w){
@@ -46,45 +46,6 @@ class label_c{
       for(int i=7; i>=0; i--)
         cout<< !!(s & (1<<i));
       cout<<endl;
-    }
-};
-
-template<size_t dim>
-class cost_c{
-  public:
-    vector<float> c;
-
-    cost_c(){
-      c = vector<float>(dim,0);
-    }
-    cost_c(vector<float>& c_) : c(c_) {}
-    cost_c(const cost_c<dim>& c2){
-      c = c2.c;
-    }
-    cost_c operator+(const cost_c& c2){
-      cost_c toret;
-      toret += c2;
-      return toret;
-    }
-    cost_c& operator+=(const cost_c& c2){
-      for(size_t i=0; i<dim; i++)
-        c[i] += c2.c[i];
-      return *this;
-    }
-    bool operator<(const cost_c& c2){
-      for(size_t i=0; i<dim; i++){
-        if(c[i] < c2.c[i])
-          return true;
-        else if(c[i] > c2.c[i])
-          return false;
-      }
-      return true;
-    }
-    void print(){
-      cout<<"(";
-      for(auto& ci : c)
-        cout<<ci<<",";
-      cout<<")"<<endl;
     }
 };
 
@@ -132,7 +93,7 @@ class automaton_ss_c{
 };
 
 template<size_t max_priority>
-class automaton_product{
+class automaton_product_c{
   public:
     set<pair<size_t, automaton_ss_c> > rules;
 
@@ -144,13 +105,13 @@ class automaton_product{
     };
 
     cost_c<max_priority+2> get_cost(const timed_word_c& tw){
-      cost_c<max_priority+2> cost;
+      cost_c<max_priority+2> cost(0);
       for(auto& ppsi : rules){
         auto& psi = ppsi.second;
         float t1 = psi.get_cost(tw);
-        cost.c[ppsi.first] += t1;  
+        cost.val[ppsi.first] += t1; 
       }
-      cost.c[max_priority+1] = tw.dt;
+      cost.val[max_priority+1] = tw.dt;
       return cost;
     };
 };
