@@ -36,7 +36,7 @@ class label_c{
     friend bool operator<(const label_c& a, const label_c& b){
       return a.s < b.s;
     }
-    bool operator[](const size_t w){
+    bool operator[](const size_t w) const{
       return (s & (1<<w));
     }
     bool operator!=(label_c& l){

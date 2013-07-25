@@ -13,6 +13,8 @@ template<size_t N>
 class mvregion_c : public region_c<N>{
   public:
     label_c label;
+    mvregion_c() : region_c<N>(){}
+    mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin){}
 };
 
 template<class dynamical_system_tt, class map_tt, class cost_tt, class automaton_product_t>
@@ -82,11 +84,10 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, cost_tt>{
         opt_data_t& opt_data, cost_t& extend_cost)
     {
       float total_variation = dynamical_system.evaluate_extend_cost(si, sf, opt_data);
+      if(total_variation < 0)
+        return 1;
       get_automaton_cost(si, sf, total_variation, extend_cost);
-      extend_cost[extend_cost.dim-1] = total_variation;
-      if(total_variation > 0)
-        return 0;
-      return 1;
+      return 0;
     }
 };
 
