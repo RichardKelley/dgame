@@ -36,6 +36,11 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, cost_tt>{
     automaton_product_t abar;
     vector<region_t> labeled_regions;
 
+    int insert_regions(vector<region_t>& regions){
+      labeled_regions(regions);
+      return 0;
+    }
+    
     int insert_rules(vector<automaton_ss_c>& psi){
       for(auto& p : psi)
         abar.insert(p);
