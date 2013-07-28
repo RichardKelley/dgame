@@ -18,11 +18,14 @@ class dgame_t{
       p2.system.insert_rules(psi);
     };
     
-    void insert_regions(region_t& op_region; vector<region_t>& regions){
+    void insert_regions(region_t& op_region, region_t& g1, region_t& g2, 
+        vector<region_t>& regions){
       p1.system.operating_region = op_region;
+      p1.system.goal_region = g1;
       p1.system.insert_regions(regions);
       
       p2.system.operating_region = op_region;
+      p2.system.goal_region = g2;
       p2.system.insert_regions(regions);
     }
     
