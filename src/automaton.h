@@ -1,7 +1,9 @@
 #ifndef __automaton_h__
 #define __automaton_h__
 
-#include "utils.h"
+#include <smpl/smpl.h>
+
+typedef uint8_t symbol;
 
 class label_c{
   public:
@@ -97,7 +99,7 @@ class automaton_product_c{
   public:
     set<pair<size_t, automaton_ss_c> > rules;
 
-    int insert(const automaton_ss_c& psi, size_t p){
+    int insert(size_t p, const automaton_ss_c& psi){
       assert(p <= max_priority);
       auto pp = make_pair(p, psi);
       rules.insert(pp);

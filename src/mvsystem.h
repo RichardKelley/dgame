@@ -1,7 +1,6 @@
 #ifndef __mvsystem_h__
 #define __mvsystem_h__
 
-#include <smpl/smpl.h>
 #include "automaton.h"
 
 #define SIDEWALK      (0)
@@ -17,33 +16,33 @@ class mvregion_c : public region_c<N>{
     mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin){}
 };
 
-template<class dynamical_system_tt, class map_tt, class cost_tt, class automaton_product_t>
-class mvsystem_c : public system_c<dynamical_system_tt, map_tt, cost_tt>{
+template<class dynamical_system_tt, class map_tt, class region_tt, class cost_tt, class automaton_product_t>
+class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_tt>{
   public:
     typedef dynamical_system_tt dynamical_system_t;
     typedef map_tt map_t;
     typedef cost_tt cost_t;
+    typedef region_tt region_t;
 
     typedef typename dynamical_system_t::state_t state;
     typedef typename dynamical_system_t::control_t control;
     typedef typename dynamical_system_t::opt_data_t opt_data_t;
     typedef typename dynamical_system_t::trajectory_t trajectory;
     const static size_t N = dynamical_system_t::state_t::N;
-    typedef mvregion_c<N> region_t;
 
-    using system_c<dynamical_system_tt, map_tt, cost_tt>::dynamical_system;
+    using system_c<dynamical_system_tt, map_tt, region_tt, cost_tt>::dynamical_system;
 
     automaton_product_t abar;
     vector<region_t> labeled_regions;
 
     int insert_regions(vector<region_t>& regions){
-      labeled_regions(regions);
+      labeled_regions = regions;
       return 0;
     }
     
-    int insert_rules(vector<automaton_ss_c>& psi){
+    int insert_rules(vector< pair<size_t, automaton_ss_c> >& psi){
       for(auto& p : psi)
-        abar.insert(p);
+        abar.insert(p.first, p.second);
       return 0;
     }
     
