@@ -53,7 +53,9 @@ int test_rrt()
 
 int main()
 {
-  typedef mvsystem_c<double_integrator_c, map_c<4>, mvregion_c<4>, cost_c<4>, automaton_product_c<2> > system_t;
+  //srand(time(NULL));
+
+  typedef mvsystem_c<double_integrator_c, map_c<4>, mvregion_c<4>, cost_c<2>, automaton_product_c<0> > system_t;
   typedef system_t::state state;
   typedef typename system_t::control control;
   typedef typename system_t::trajectory trajectory;
@@ -64,17 +66,18 @@ int main()
   bot_lcmgl_switch_buffer(lcmgl);
   
   vector<pair<size_t, automaton_ss_c> > rules;
-  rules.push_back( make_pair(0, automaton_ss_c(false, SIDEWALK, 1, 0)));
+  rules.push_back( make_pair(0, automaton_ss_c(true, GOAL, 0, 1)));
+  //rules.push_back( make_pair(1, automaton_ss_c(false, SIDEWALK, 1, 0)));
  
   float zero[4] = {0};
-  float size[4] = {100};
+  float size[4] = {25,25,5,5};
 
-  float src1[4] = {0};
-  float gc1[4] = {10,10,5,5};
+  float src1[4] = {10,-10,0,0};
+  float gc1[4] = {-10,10,0,0};
   float gs1[4] = {1,1,0.1,0.1};
   
-  float src2[4] = {-10,10,0,0};
-  float gc2[4] = {10,10,5,5};
+  float src2[4] = {-10,-10,0,0};
+  float gc2[4] = {10,10,0,0};
   float gs2[4] = {1,1,0.1,0.1};
   
   region op_region = region(zero, size);
@@ -83,14 +86,19 @@ int main()
   state p10(src1);
   state p20(src2);
   vector<region> regions;
-
+  
   dgame_c<system_t> dgame(lcmgl);
   dgame.insert_rules(rules);
   dgame.insert_regions(op_region, gr1, gr2, regions);
   dgame.initialize(p10, p20);
   
-  for(auto i : range(0, 100))
+  for(auto i : range(0, 2000))
+  {
     dgame.iteration();
+    if(i%100 == 0)
+      dgame.draw();
+  }
+  dgame.draw();
 
   return 0;
 }

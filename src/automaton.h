@@ -12,7 +12,8 @@ class label_c{
 
     label_c() : s(0){
     };
-    label_c(symbol s_) : s(s_){
+    label_c(const size_t w){
+      s = (1<<w);
     }
     void insert(const size_t w){
       s = s | (1<<w);
@@ -76,14 +77,15 @@ class automaton_ss_c{
     float cost;
 
     automaton_ss_c(){}
-    automaton_ss_c(bool is_positive_, label_c label_,
+    automaton_ss_c(bool is_positive_, const size_t w,
         float weight_, float cost_):
-      is_positive(is_positive_), label(label_), weight(weight_), cost(cost_){
+      is_positive(is_positive_), weight(weight_), cost(cost_){
+        label = label_c(w);
       }
 
     float get_cost(const timed_word_c& tw) const{
       if( (label.is_subset(tw.label) && is_positive) ||
-          (!label.is_subset(tw.label) && !is_positive))
+          ((!label.is_subset(tw.label)) && (!is_positive)))
         return 0;
       else
         return cost + weight*tw.dt;
