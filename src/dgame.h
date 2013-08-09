@@ -83,7 +83,7 @@ class dgame_c{
         vector<region_t>& regions){
       p1.system.operating_region = op_region;
       p1.system.goal_region = g1;
-      p1.goal_sample_freq = 0.2;
+      p1.goal_sample_freq = 0.1;
 
       auto regions1 = regions;
       regions1.push_back(g1);
@@ -91,7 +91,7 @@ class dgame_c{
       
       p2.system.operating_region = op_region;
       p2.system.goal_region = g2;
-      p2.goal_sample_freq = 0.2;
+      p2.goal_sample_freq = 0.1;
       
       auto regions2 = regions;
       regions2.push_back(g2);
@@ -115,7 +115,7 @@ class dgame_c{
       float dt = t1.dt;
       
       bool only_xy = true;
-      float collision_distance = -0.01;
+      float collision_distance = 1;
       int c = 0, cm = min(t1.states.size(), t2.states.size());
       while(c < cm)
       {
@@ -194,16 +194,20 @@ class dgame_c{
       { 
         p1.get_best_trajectory(t1);
         br = p1.lower_bound_vertex->best_response;
-        p2.get_trajectory_root(*br, t2);
+        if(br)
+          p2.get_trajectory_root(*br, t2);
       }
     }
 
     void draw(int iter=0)
     {
-      //p1.plot_tree();
-      //p2.plot_tree();
+      p1.plot_tree();
+      p2.plot_tree();
       if(p1.lower_bound_vertex)
-        p1.lower_bound_vertex->cost_from_root.print(cout, "p1bv: ", "\n");
+        p1.lower_bound_vertex->cost_from_root.print(cout, "p1: ", " ");
+      if(p2.lower_bound_vertex)
+        p2.lower_bound_vertex->cost_from_root.print(cout, "p2: ", " ");
+      cout<<endl;
 
       trajectory t1, t2;
       get_best_trajectories(t1, t2);
