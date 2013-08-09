@@ -7,7 +7,6 @@
 #define GOOD_DIR      (1)
 #define LANE_CHANGE   (2)
 #define BOLD_LEFT     (3)
-#define GOAL          (4)
 
 template<size_t N>
 class mvregion_c : public region_c<N>{
@@ -36,13 +35,6 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     automaton_product_t abar;
     vector<region_t> labeled_regions;
 
-    cost_t get_zero_cost()
-    {
-      cost_t c(0);
-      c.val[0] = 1;
-      return c;
-    }
-    
     int insert_regions(vector<region_t>& regions){
       labeled_regions = regions;
       return 0;
@@ -79,9 +71,6 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       if(l2[BOLD_LEFT])
         lt.insert(BOLD_LEFT);
       
-      if((!l1[GOAL]) && l2[GOAL])
-        lt.insert(GOAL);
-
       timed_word_c tw(dt, lt);
       return tw;
     }

@@ -68,7 +68,7 @@ class dgame_c{
 
       float p2pc[4] = {0,1,0,0.9};
       float p2lc[4] = {0,0,0,0.5};
-      float p2blc[4] = {0,0,1,0.9};
+      float p2blc[4] = {0,1,0,0.9};
       p2.set_points_color(p2pc, 4);
       p2.set_lines_color(p2lc, 1.5);
       p2.set_best_lines_color(p2blc,4);
@@ -83,19 +83,17 @@ class dgame_c{
         vector<region_t>& regions){
       p1.system.operating_region = op_region;
       p1.system.goal_region = g1;
-      p1.goal_sample_freq = 0.5;
+      p1.goal_sample_freq = 0.2;
 
       auto regions1 = regions;
-      g1.label.insert(GOAL);
       regions1.push_back(g1);
       p1.system.insert_regions(regions1);
       
       p2.system.operating_region = op_region;
       p2.system.goal_region = g2;
-      p1.goal_sample_freq = 0.5;
+      p2.goal_sample_freq = 0.2;
       
       auto regions2 = regions;
-      g2.label.insert(GOAL);
       regions2.push_back(g2);
       p2.system.insert_regions(regions2);
     }
@@ -133,16 +131,19 @@ class dgame_c{
 
     void calculate_best_response(p1vertex_t& v)
     {
-      p2vertex_t* best_response = NULL;
+      p2vertex_t* best_response = p2.root;
       cost_t best_cost;
       for(auto& pv : p2.list_vertices)
       {
-        if(!check_collision_trajectory(v, *pv))
+        if(p2.system.is_in_goal(pv->state))
         {
-          if(pv->cost_from_root < best_cost)
+          if(!check_collision_trajectory(v, *pv))
           {
-            best_cost = pv->cost_from_root;
-            best_response = pv;
+            if(pv->cost_from_root < best_cost)
+            {
+              best_cost = pv->cost_from_root;
+              best_response = pv;
+            }
           }
         }
       }
@@ -197,7 +198,7 @@ class dgame_c{
       }
     }
 
-    void draw()
+    void draw(int iter=0)
     {
       //p1.plot_tree();
       //p2.plot_tree();

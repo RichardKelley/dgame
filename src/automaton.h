@@ -75,7 +75,7 @@ class automaton_ss_c{
     label_c label;
     float weight;
     float cost;
-
+    
     automaton_ss_c(){}
     automaton_ss_c(bool is_positive_, const size_t w,
         float weight_, float cost_):
