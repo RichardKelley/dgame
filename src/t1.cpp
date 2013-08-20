@@ -71,25 +71,25 @@ int main()
   float zero[4] = {0};
   float size[4] = {25,25,4,4};
 
-  float src1[4] = {10,-10,0,0};
+  float sc1[4] = {10,-10,0,0};
   float gc1[4] = {-10,10,0,1};
   float gs1[4] = {1,1,0.1,0.1};
   
-  float src2[4] = {-10,-10,0,0};
+  float sc2[4] = {-10,-10,0,0};
   float gc2[4] = {10,10,1,0};
   float gs2[4] = {1,1,0.1,0.1};
   
   region op_region = region(zero, size);
   region gr1 = region(gc1, gs1);
   region gr2 = region(gc2, gs2);
-  state p10(src1);
-  state p20(src2);
+  region sr1 = region(sc1, gs1);
+  region sr2 = region(sc2, gs2);
+
   vector<region> regions;
   
   dgame_c<system_t> dgame(lcmgl);
   dgame.insert_rules(rules);
-  dgame.insert_regions(op_region, gr1, gr2, regions);
-  dgame.initialize(p10, p20);
+  dgame.initialize(op_region, sr1, gr1, sr2, gr2, regions);
   
   for(auto i : range(0, 10000))
   {

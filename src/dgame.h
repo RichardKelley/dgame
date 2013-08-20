@@ -34,6 +34,91 @@ class p2vertex_c : public vertex_c<system_tt>
     p2vertex_c(const state_t& s) : vertex_t(s) {} 
 };
 
+template<class system_tt, class vertex_tt, class bvertex_tt, class edge_tt, class bedge_tt>
+class birrts_c
+{
+  public:
+    typedef system_tt system_t;
+    typedef typename system_t::state state;
+    typedef typename system_t::cost_t cost_t;
+    typedef typename system_t::trajectory trajectory;
+    typedef typename system_t::region_t region_t;
+    
+    rrts_c<vertex_tt, edge_tt> frrts;
+    brrts_c<bvertex_tt, bedge_tt> brrts;
+   
+    void set_lcmgl(bot_lcmgl_t* lcmgl)
+    {
+      frrts.lcmgl = lcmgl;
+      brrts.lcmgl = lcmgl;
+    }
+    void set_points_color(float* pc, float width)
+    {
+      frrts.set_points_color(pc, width);
+      brrts.set_points_color(pc, width);
+    }
+    void set_lines_color(float* lc, float lw)
+    {
+      frrts.set_lines_color(lc, lw);
+      brrts.set_lines_color(lc, lw);
+    }
+    void set_best_lines_color(float* blc, float blw)
+    {
+      frrts.set_best_lines_color(blc, blw);
+      brrts.set_best_lines_color(blc, blw);
+    }
+
+    void insert_rules(vector< pair<size_t, automaton_ss_c> >& psi)
+    {
+      frrts.system.insert_rules(psi);
+      brrts.system.insert_rules(psi);
+    }
+    
+    void initialize(region_t& op_region, region_t& s1, region_t& g1,
+        vector<region_t>& regions)
+    {
+      frrts.system.operating_region = op_region;
+      frrts.system.goal_region = g1;
+      frrts.goal_sample_freq = 0.1;
+      frrts.system.insert_regions(regions);
+      frrts.initialize(state(s1.c));
+      frrts.do_branch_and_bound = false;
+
+      brrts.system.operating_region = op_region;
+      brrts.system.goal_region = s1;
+      brrts.goal_sample_freq = 0.1;
+      brrts.system.insert_regions(regions);
+      brrts.initialize(state(g1.c));
+      brrts.do_branch_and_bound = false;
+    }
+
+    cost_t get_cost_to_goal(vertex_tt* v)
+    {
+      bvertex_tt* nearest_vertex;
+      if(!brrts.get_nearest_vertex(v->state, nearest_vertex))
+        return nearest_vertex->cost_to_root;
+      else
+        return cost_t();
+    }
+
+    vertex_tt* get_best_vertex()
+    {
+      vertex_tt* best_vertex = nullptr;
+      cost_t best_cost;
+      for(auto& pv : frrts.list_vertices)
+      {
+        cost_t t1 = pv->cost_from_root + get_cost_to_goal(pv);
+        if(t1 < best_cost)
+        {
+          best_cost = t1;
+          best_vertex = pv;
+        }
+      }
+      return best_vertex;
+    }
+};
+
+
 template<class system_tt>
 class dgame_c{
   public:
@@ -45,26 +130,21 @@ class dgame_c{
 
     typedef p1vertex_c<system_tt> p1vertex_t;
     typedef p2vertex_c<system_tt> p2vertex_t;
+    typedef bvertex_c<system_tt> bvertex_t;
+    typedef edge_c<system_tt> edge_t;
+    typedef bedge_c<system_tt> bedge_t;
+
     typedef typename system_t::cost_t cost_t;
 
-#if 0
-    struct compare_vertex{
-      bool operator()(const vertex_t* pv1, const vertex_t* pv2){
-        return pv1->cost_from_root < pv2->cost_from_root;
-      }
-    };
-    priority_queue<vertex_t*, vector<vertex_t*>, compare_vertex> p1q; 
-    priority_queue<vertex_t*, vector<vertex_t*>, compare_vertex> p2q; 
-#endif
-
     bot_lcmgl_t* lcmgl;
-    rrts_c<p1vertex_t, edge_c<system_t> > p1;
-    rrts_c<p2vertex_t, edge_c<system_t> > p2;
+    birrts_c<system_t, p1vertex_t, bvertex_t, edge_t, bedge_t> p1;
+    birrts_c<system_t, p2vertex_t, bvertex_t, edge_t, bedge_t> p2;
 
     dgame_c(bot_lcmgl_t* lcmgl_in) {
       lcmgl = lcmgl_in;
-      p1.lcmgl = lcmgl;
-      p2.lcmgl = lcmgl;
+
+      p1.set_lcmgl(lcmgl);
+      p2.set_lcmgl(lcmgl);
 
       float p2pc[4] = {0,1,0,0.9};
       float p2lc[4] = {0,0,0,0.5};
@@ -75,43 +155,22 @@ class dgame_c{
     }
 
     void insert_rules(vector< pair<size_t, automaton_ss_c> >& psi){
-      p1.system.insert_rules(psi);
-      p2.system.insert_rules(psi);
+      p1.insert_rules(psi);
+      p2.insert_rules(psi);
     };
     
-    void insert_regions(region_t& op_region, region_t& g1, region_t& g2, 
+    void initialize(region_t& op_region, region_t& s1, region_t& g1, region_t& s2, region_t& g2, 
         vector<region_t>& regions){
-      p1.system.operating_region = op_region;
-      p1.system.goal_region = g1;
-      p1.goal_sample_freq = 0.1;
-
-      auto regions1 = regions;
-      regions1.push_back(g1);
-      p1.system.insert_regions(regions1);
-      
-      p2.system.operating_region = op_region;
-      p2.system.goal_region = g2;
-      p2.goal_sample_freq = 0.1;
-      
-      auto regions2 = regions;
-      regions2.push_back(g2);
-      p2.system.insert_regions(regions2);
+      p1.initialize(op_region, s1, g1, regions);
+      p2.initialize(op_region, s2, g2, regions);
     }
     
-    void initialize(const state& p10, const state& p20){
-      p1.initialize(p10);
-      //p1q.push(p1.last_added_vertex);
-      
-      p2.initialize(p20);
-      //p2q.push(p2.last_added_vertex);
-    }
-   
     bool check_collision_trajectory(p1vertex_t& p1v, p2vertex_t& p2v)
     {
       trajectory t1, t2;
       
-      p1.get_trajectory_root(p1v, t1);
-      p2.get_trajectory_root(p2v, t2);
+      p1.frrts.get_trajectory_root(p1v, t1);
+      p2.frrts.get_trajectory_root(p2v, t2);
       float dt = t1.dt;
       
       bool only_xy = true;
@@ -131,19 +190,17 @@ class dgame_c{
 
     void calculate_best_response(p1vertex_t& v)
     {
-      p2vertex_t* best_response = p2.root;
+      p2vertex_t* best_response = p2.frrts.root;
       cost_t best_cost;
-      for(auto& pv : p2.list_vertices)
+      for(auto& pv : p2.frrts.list_vertices)
       {
-        if(p2.system.is_in_goal(pv->state))
+        if(!check_collision_trajectory(v, *pv))
         {
-          if(!check_collision_trajectory(v, *pv))
+          cost_t t1 = pv->cost_from_root + p2.get_cost_to_goal(pv);
+          if(t1 < best_cost)
           {
-            if(pv->cost_from_root < best_cost)
-            {
-              best_cost = pv->cost_from_root;
-              best_response = pv;
-            }
+            best_cost = pv->cost_from_root;
+            best_response = pv;
           }
         }
       }
@@ -160,18 +217,20 @@ class dgame_c{
     
     void iteration()
     {
-      p1.iteration();
-      p1vertex_t* p1l = p1.last_added_vertex;
+      p1.frrts.iteration();
+      p1.brrts.iteration();
+      p1vertex_t* p1l = p1.frrts.last_added_vertex;
 
-      p2.iteration();
-      p2vertex_t* p2l = p2.last_added_vertex;
+      p2.frrts.iteration();
+      p2.brrts.iteration();
+      p2vertex_t* p2l = p2.frrts.last_added_vertex;
       
       if(p2l)
       {
         vector<p2vertex_t*> S1;
-        for(auto& pv : p2.list_vertices)
+        for(auto& pv : p2.frrts.list_vertices)
         {
-          if(p2l->cost_from_root < pv->cost_from_root)
+          if(p2l->cost_from_root < pv->cost_from_root + p2.get_cost_to_goal(pv))
           {
             S1.push_back(pv);
           }
@@ -190,29 +249,33 @@ class dgame_c{
     void get_best_trajectories(trajectory& t1, trajectory& t2)
     {
       p2vertex_t* br = nullptr;
-      if(p1.lower_bound_vertex)
-      { 
-        p1.get_best_trajectory(t1);
-        br = p1.lower_bound_vertex->best_response;
-        if(br)
-          p2.get_trajectory_root(*br, t2);
-      }
+      p1vertex_t* p1bv;
+
+      if(p1.frrts.lower_bound_vertex)
+        p1bv = p1.frrts.lower_bound_vertex;
+      else
+        p1bv = p1.get_best_vertex();
+      
+      p1.frrts.get_trajectory_root(*p1bv, t1);
+      br = p1bv->best_response;
+      if(br)
+        p2.frrts.get_trajectory_root(*br, t2);
     }
 
     void draw(int iter=0)
     {
-      p1.plot_tree();
-      p2.plot_tree();
-      if(p1.lower_bound_vertex)
-        p1.lower_bound_vertex->cost_from_root.print(cout, "p1: ", " ");
-      if(p2.lower_bound_vertex)
-        p2.lower_bound_vertex->cost_from_root.print(cout, "p2: ", " ");
+      p1.frrts.plot_tree();
+      p2.frrts.plot_tree();
+      if(p1.frrts.lower_bound_vertex)
+        p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "p1: ", " ");
+      if(p2.frrts.lower_bound_vertex)
+        p2.frrts.lower_bound_vertex->cost_from_root.print(cout, "p2: ", " ");
       cout<<endl;
 
       trajectory t1, t2;
       get_best_trajectories(t1, t2);
-      p1.plot_trajectory(t1, p1.best_lines_color, p1.best_lines_width); 
-      p2.plot_trajectory(t2, p2.best_lines_color, p2.best_lines_width); 
+      p1.frrts.plot_trajectory(t1, p1.frrts.best_lines_color, p1.frrts.best_lines_width); 
+      p2.frrts.plot_trajectory(t2, p2.frrts.best_lines_color, p2.frrts.best_lines_width); 
       
       bot_lcmgl_switch_buffer(lcmgl);
     }
