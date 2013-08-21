@@ -199,7 +199,7 @@ class dgame_c{
           cost_t t1 = pv->cost_from_root + p2.get_cost_to_goal(pv);
           if(t1 < best_cost)
           {
-            best_cost = pv->cost_from_root;
+            best_cost = t1;
             best_response = pv;
           }
         }
@@ -218,13 +218,15 @@ class dgame_c{
     void iteration()
     {
       p1.frrts.iteration();
-      p1.brrts.iteration();
       p1vertex_t* p1l = p1.frrts.last_added_vertex;
+      if(p1l)
+        p1.brrts.iteration(&(p1l->state));
 
       p2.frrts.iteration();
-      p2.brrts.iteration();
       p2vertex_t* p2l = p2.frrts.last_added_vertex;
-      
+      if(p2l)
+        p2.brrts.iteration(&(p2l->state));
+
       if(p2l)
       {
         vector<p2vertex_t*> S1;
@@ -259,7 +261,10 @@ class dgame_c{
       p1.frrts.get_trajectory_root(*p1bv, t1);
       br = p1bv->best_response;
       if(br)
+      {
+        br->cost_from_root.print(cout, "br: ", "\n");
         p2.frrts.get_trajectory_root(*br, t2);
+      }
     }
 
     void draw(int iter=0)

@@ -94,8 +94,11 @@ int main()
   for(auto i : range(0, 10000))
   {
     dgame.iteration();
-    if(i%100 == 0)
+    if(i%10 == 0)
+    {
       dgame.draw(i);
+      getchar();
+    }
   }
   dgame.draw();
 
