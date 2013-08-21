@@ -21,7 +21,7 @@ void example1()
   rules.push_back( make_pair(1, automaton_ss_c(false, SLOW, 1, 0)));
  
   float zero[4] = {0};
-  float size[4] = {3*w,3*w,2*maxv,2*maxv};
+  float size[4] = {2*w,2*w,2*maxv,2*maxv};
   region op_region = region(zero, size);
   
   float sc1[4] = {w/4,-w/2,0,1};
@@ -65,14 +65,16 @@ void example1()
   dgame.insert_rules(rules);
   dgame.initialize(op_region, sr1, gr1, sr2, gr2, regions);
   
-  for(auto i : range(0, 10000))
+  for(auto i : range(0, 2000))
   {
     dgame.iteration();
     if(i%100 == 0)
     {
       dgame.draw(i);
-      getchar();
+      //getchar();
     }
+    if(i%10 == 0)
+      cout<<i<<endl;
   }
   dgame.draw();
 

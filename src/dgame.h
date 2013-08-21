@@ -75,21 +75,21 @@ class birrts_c
     }
     
     void initialize(region_t& op_region, region_t& s1, region_t& g1,
-        vector<region_t>& regions)
+        vector<region_t>& regions, bool do_branch_and_bound=true)
     {
       frrts.system.operating_region = op_region;
       frrts.system.goal_region = g1;
-      frrts.goal_sample_freq = 0.3;
+      frrts.goal_sample_freq = 0.1;
       frrts.system.insert_regions(regions);
       frrts.initialize(state(s1.c));
-      frrts.do_branch_and_bound = false;
+      frrts.do_branch_and_bound = do_branch_and_bound;
 
       brrts.system.operating_region = op_region;
       brrts.system.goal_region = s1;
-      brrts.goal_sample_freq = 0.3;
+      brrts.goal_sample_freq = 0.1;
       brrts.system.insert_regions(regions);
       brrts.initialize(state(g1.c));
-      brrts.do_branch_and_bound = false;
+      brrts.do_branch_and_bound = do_branch_and_bound;
     }
 
     cost_t get_cost_to_goal(vertex_tt* v)
@@ -162,7 +162,7 @@ class dgame_c{
     void initialize(region_t& op_region, region_t& s1, region_t& g1, region_t& s2, region_t& g2, 
         vector<region_t>& regions){
       p1.initialize(op_region, s1, g1, regions);
-      p2.initialize(op_region, s2, g2, regions);
+      p2.initialize(op_region, s2, g2, regions, false);
     }
     
     bool check_collision_trajectory(p1vertex_t& p1v, p2vertex_t& p2v)
@@ -174,7 +174,7 @@ class dgame_c{
       float dt = t1.dt;
       
       bool only_xy = true;
-      float collision_distance = 0.1;
+      float collision_distance = 0.5;
       int c = 0, cm = min(t1.states.size(), t2.states.size());
       while(c < cm)
       {
@@ -262,14 +262,14 @@ class dgame_c{
       br = p1bv->best_response;
       if(br)
       {
-        br->cost_from_root.print(cout, "br: ", "\n");
+        //br->cost_from_root.print(cout, "br: ", "\n");
         p2.frrts.get_trajectory_root(*br, t2);
       }
     }
 
-    void draw(int iter=0)
+    void draw(int iter=100)
     {
-      if(iter < 200)
+      if(iter < 501)
       {
         p1.frrts.plot_tree();
         p2.frrts.plot_tree();

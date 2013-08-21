@@ -4,7 +4,7 @@
 
 int main()
 {
-  srand(time(NULL));
+  //srand(time(NULL));
 
   example1(); 
   return 0;
