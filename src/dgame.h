@@ -79,14 +79,14 @@ class birrts_c
     {
       frrts.system.operating_region = op_region;
       frrts.system.goal_region = g1;
-      frrts.goal_sample_freq = 0.1;
+      frrts.goal_sample_freq = 0.3;
       frrts.system.insert_regions(regions);
       frrts.initialize(state(s1.c));
       frrts.do_branch_and_bound = false;
 
       brrts.system.operating_region = op_region;
       brrts.system.goal_region = s1;
-      brrts.goal_sample_freq = 0.1;
+      brrts.goal_sample_freq = 0.3;
       brrts.system.insert_regions(regions);
       brrts.initialize(state(g1.c));
       brrts.do_branch_and_bound = false;
@@ -174,7 +174,7 @@ class dgame_c{
       float dt = t1.dt;
       
       bool only_xy = true;
-      float collision_distance = 1;
+      float collision_distance = 0.1;
       int c = 0, cm = min(t1.states.size(), t2.states.size());
       while(c < cm)
       {
@@ -269,8 +269,11 @@ class dgame_c{
 
     void draw(int iter=0)
     {
-      p1.frrts.plot_tree();
-      p2.frrts.plot_tree();
+      if(iter < 200)
+      {
+        p1.frrts.plot_tree();
+        p2.frrts.plot_tree();
+      }
       if(p1.frrts.lower_bound_vertex)
         p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "p1: ", " ");
       if(p2.frrts.lower_bound_vertex)

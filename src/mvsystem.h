@@ -5,13 +5,16 @@
 
 #define SIDEWALK      (0)
 #define GOOD_DIR      (1)
-#define LANE_CHANGE   (2)
-#define BOLD_LEFT     (3)
+#define RIGHT_LANE    (2)
+#define LEFT_LANE     (3)
+#define LANE_CHANGE   (4)
+#define SLOW          (5)
 
 template<size_t N>
 class mvregion_c : public region_c<N>{
   public:
     label_c label;
+
     mvregion_c() : region_c<N>(){}
     mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin){}
 };
@@ -46,13 +49,34 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       return 0;
     }
     
+    bool is_state_in_correct_direction(const state& s, const region_t& r)
+    {
+      return (s[2]*r.c[2]) + (s[3]*r.c[3]) > 0;
+    }
+    
     label_c get_state_label(const state& s)
     {
       label_c l;
-      for(auto& r : labeled_regions){
+      for(auto& r : labeled_regions)
+      {
         if(r.is_inside(s))
+        {
           l.insert(r.label);
+          if(r.label[LEFT_LANE] || r.label[RIGHT_LANE])
+          {
+            if(is_state_in_correct_direction(s, r))
+              l.insert(GOOD_DIR);
+            else
+              l.remove(GOOD_DIR);
+          }
+          else
+          {
+            l.insert(GOOD_DIR);
+          }
+        }
       }
+      if(sqrt(s[2]*s[2] + s[3]*s[3]) < 1)
+        l.insert(SLOW);
       return l;
     }
     
@@ -63,14 +87,9 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       if(l2[SIDEWALK])
         lt.insert(SIDEWALK);
       
-      if(l1[GOOD_DIR] && l2[GOOD_DIR])
+      if(l2[GOOD_DIR])
         lt.insert(GOOD_DIR);
-      else if(l1[GOOD_DIR] || l2[GOOD_DIR])
-        lt.insert(LANE_CHANGE);
-      
-      if(l2[BOLD_LEFT])
-        lt.insert(BOLD_LEFT);
-      
+
       timed_word_c tw(dt, lt);
       return tw;
     }
