@@ -158,7 +158,15 @@ class dgame_c{
       p1.insert_rules(psi);
       p2.insert_rules(psi);
     };
-    
+   
+    void insert_obstacles(vector<region_t>& obstacles)
+    {
+      p1.frrts.system.obstacle_map.insert_obstacles(obstacles);
+      p1.brrts.system.obstacle_map.insert_obstacles(obstacles);
+      p2.frrts.system.obstacle_map.insert_obstacles(obstacles);
+      p2.brrts.system.obstacle_map.insert_obstacles(obstacles);
+    }
+
     void initialize(region_t& op_region, region_t& s1, region_t& g1, region_t& s2, region_t& g2, 
         vector<region_t>& regions){
       p1.initialize(op_region, s1, g1, regions);
@@ -171,7 +179,6 @@ class dgame_c{
       
       p1.frrts.get_trajectory_root(p1v, t1);
       p2.frrts.get_trajectory_root(p2v, t2);
-      float dt = t1.dt;
       
       bool only_xy = true;
       float collision_distance = 0.5;
@@ -267,9 +274,9 @@ class dgame_c{
       }
     }
 
-    void draw(int iter=100)
+    void draw(int iter=-1)
     {
-      if(iter < 501)
+      if(iter < 500)
       {
         p1.frrts.plot_tree();
         p2.frrts.plot_tree();
