@@ -2,8 +2,7 @@
 #define __dgame_h__
 
 #include "mvsystem.h"
-#include <queue>
-
+#include <map>
 
 template<class system_tt> class p1vertex_c;
 template<class system_tt> class p2vertex_c;
@@ -46,7 +45,8 @@ class birrts_c
     
     rrts_c<vertex_tt, edge_tt> frrts;
     brrts_c<bvertex_tt, bedge_tt> brrts;
-   
+    map<cost_t, vertex_tt*> best_response_map;  
+
     void set_lcmgl(bot_lcmgl_t* lcmgl)
     {
       frrts.lcmgl = lcmgl;
@@ -92,7 +92,7 @@ class birrts_c
       brrts.do_branch_and_bound = do_branch_and_bound;
     }
 
-    cost_t get_cost_to_goal(vertex_tt* v)
+    cost_t get_cost_to_goal(const vertex_tt* v)
     {
       bvertex_tt* nearest_vertex;
       if(!brrts.get_nearest_vertex(v->state, nearest_vertex))
@@ -115,6 +115,35 @@ class birrts_c
         }
       }
       return best_vertex;
+    }
+
+    void update_best_response_queue_iter(vertex_tt* pv)
+    {
+      cost_t t1 = pv->cost_from_root + get_cost_to_goal(pv);
+      
+      auto map_location = best_response_map.end();
+      for(auto it = best_response_map.begin(); it!= best_response_map.end(); it++)
+      {
+        if(it->second == pv)
+          map_location = it;
+      }
+      
+      if(map_location != best_response_map.end())
+        best_response_map.erase(map_location);
+      best_response_map.insert(make_pair(t1, pv));
+      
+      //if(best_response_map.size() > 10)
+        //best_response_map.erase(--best_response_map.rbegin().base());
+
+      for(auto& pc : pv->children)
+        update_best_response_queue_iter(static_cast<vertex_tt*>(pc));
+    }
+
+    void update_best_response_queue(vertex_tt* vl, set<vertex_tt*>& rewired_vertices)
+    {
+      update_best_response_queue_iter(vl);
+      for(auto& pv : rewired_vertices)
+        update_best_response_queue_iter(static_cast<vertex_tt*>(pv));
     }
 };
 
@@ -201,8 +230,10 @@ class dgame_c{
     {
       p2vertex_t* best_response = p2.frrts.root;
       cost_t best_cost;
-      for(auto& pv : p2.frrts.list_vertices)
+      
+      for(auto& p2brm : p2.best_response_map)
       {
+        auto pv = p2brm.second;
         if(!check_collision_trajectory(v, *pv))
         {
           cost_t t1 = pv->cost_from_root + p2.get_cost_to_goal(pv);
@@ -239,10 +270,14 @@ class dgame_c{
         p1bv = p1.get_best_vertex();
       p1.frrts.get_trajectory_root(*p1bv, t1);
       
-      p2.frrts.iteration(NULL, &t1, 1);
+      set<p2vertex_t*> p2f_rewired_vertices;
+      p2.frrts.iteration(NULL, &p2f_rewired_vertices, &t1, 1);
       p2vertex_t* p2l = p2.frrts.last_added_vertex;
       if(p2l)
-        p2.brrts.iteration(&(p2l->state), &t1, 1);
+      {
+        p2.brrts.iteration(&(p2l->state), NULL, &t1, 1);
+        p2.update_best_response_queue(p2l, p2f_rewired_vertices);
+      }
 
       if(p2l)
       {
