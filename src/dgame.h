@@ -16,7 +16,7 @@ class p1vertex_c : public vertex_c<system_tt>
     typedef typename vertex_t::state_t state_t;
     
     p2vertex_c<system_tt>* best_response;
-
+  
     p1vertex_c() : vertex_t(){}
     p1vertex_c(const state_t& s) : vertex_t(s) {} 
 };
@@ -181,8 +181,10 @@ class dgame_c{
       p2.frrts.get_trajectory_root(p2v, t2);
       
       bool only_xy = true;
-      float collision_distance = 0.5;
+      float collision_distance = 1;
       int c = 0, cm = min(t1.states.size(), t2.states.size());
+      //cout<<"cm: "<< cm << endl;
+
       while(c < cm)
       {
         auto& s1 = t1.states[c];
@@ -190,7 +192,7 @@ class dgame_c{
         
         if(s1.dist(s2, only_xy) < collision_distance)
           return true;
-        c++;
+        c = c + 20;
       }
       return false;
     }
@@ -229,10 +231,18 @@ class dgame_c{
       if(p1l)
         p1.brrts.iteration(&(p1l->state));
 
-      p2.frrts.iteration();
+      trajectory t1;
+      p1vertex_t* p1bv;
+      if(p1.frrts.lower_bound_vertex)
+        p1bv = p1.frrts.lower_bound_vertex;
+      else
+        p1bv = p1.get_best_vertex();
+      p1.frrts.get_trajectory_root(*p1bv, t1);
+      
+      p2.frrts.iteration(NULL, &t1, 1);
       p2vertex_t* p2l = p2.frrts.last_added_vertex;
       if(p2l)
-        p2.brrts.iteration(&(p2l->state));
+        p2.brrts.iteration(&(p2l->state), &t1, 1);
 
       if(p2l)
       {
@@ -240,9 +250,7 @@ class dgame_c{
         for(auto& pv : p2.frrts.list_vertices)
         {
           if(p2l->cost_from_root < pv->cost_from_root + p2.get_cost_to_goal(pv))
-          {
             S1.push_back(pv);
-          }
         }
         for(auto& pv : S1)
         {
@@ -252,7 +260,7 @@ class dgame_c{
       }
       
       if(p1l)
-        update_best_response_descendents(*(static_cast<p1vertex_t*>(p1l)));
+        calculate_best_response(*(static_cast<p1vertex_t*>(p1l)));
     }
 
     void get_best_trajectories(trajectory& t1, trajectory& t2)

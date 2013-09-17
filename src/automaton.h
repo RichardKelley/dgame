@@ -100,7 +100,7 @@ template<size_t max_priority>
 class automaton_product_c{
   public:
     set<pair<size_t, automaton_ss_c> > rules;
-
+  
     int insert(size_t p, const automaton_ss_c& psi){
       assert(p <= max_priority);
       auto pp = make_pair(p, psi);

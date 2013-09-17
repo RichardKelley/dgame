@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6.0)
 set(POD_NAME dgame)
 include(cmake/pods.cmake)
 
-add_definitions(-pg -std=c++0x)
+add_definitions(-std=c++0x)
 
 # create an executable, and make it public
 add_executable(${POD_NAME} src/t1.cpp)
