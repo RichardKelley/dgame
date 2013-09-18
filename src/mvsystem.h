@@ -14,13 +14,23 @@ template<size_t N>
 class mvregion_c : public region_c<N>{
   public:
     label_c label;
+    float dir[2];
 
-    mvregion_c() : region_c<N>(){}
-    mvregion_c(const float* cin, const float* sin, const label_c l_in) : region_c<N>(cin, sin)
-  {
-    label = l_in;
-  }
-    mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin) {}
+    mvregion_c() : region_c<N>(){
+      dir[0] = 0;
+      dir[1] = 0;
+    }
+    mvregion_c(const float* cin, const float* sin, const float* dir_in, const label_c l_in) : region_c<N>(cin, sin)
+    {
+      label = l_in;
+      dir[0] = dir_in[0];
+      dir[1] = dir_in[1];
+    }
+    mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin)
+    {
+      dir[0] = 0;
+      dir[1] = 0;
+    }
 };
 
 template<class dynamical_system_tt, class map_tt, class region_tt, class cost_tt, class automaton_product_t>
@@ -56,7 +66,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     
     bool is_state_in_correct_direction(const state& s, const region_t& r)
     {
-      return (s[2]*r.c[2] + s[3]*r.c[3]) > 0;
+      return (s[2]*r.dir[0] + s[3]*r.dir[1]) > 0;
     }
     
     label_c get_state_label(const state& s)
@@ -93,6 +103,15 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       if(l2[GOOD_DIR])
         lt.insert(GOOD_DIR);
 
+      if(!( (l1[LEFT_LANE] && l1[RIGHT_LANE]) ||
+            (l2[LEFT_LANE] && l2[RIGHT_LANE])))
+      {
+
+        if( (l1[LEFT_LANE] && l2[RIGHT_LANE]) || 
+            (l2[LEFT_LANE] && l1[RIGHT_LANE]) )
+          lt.insert(LANE_CHANGE);
+      }
+      
       if(l2[SLOW])
         lt.insert(SLOW);
 
@@ -105,6 +124,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       label_c li = get_state_label(si); 
       label_c lf = get_state_label(sf);
       timed_word_c tw = get_timed_word(li, lf, dt);
+      //tw.print();
       extend_cost = abar.get_cost(tw);
       return 0;
     }
@@ -133,7 +153,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
           
         }
         drop_counter++;
-        if(drop_counter == 25)
+        if(drop_counter == 1)
           drop_counter = 0;
       }
       return true;
