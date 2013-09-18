@@ -110,7 +110,8 @@ class automaton_product_c{
 
     cost_c<max_priority+2> get_cost(const timed_word_c& tw){
       cost_c<max_priority+2> cost(0);
-      for(auto& ppsi : rules){
+      for(auto& ppsi : rules)
+      {
         auto& psi = ppsi.second;
         float t1 = psi.get_cost(tw);
         cost.val[ppsi.first] += t1; 

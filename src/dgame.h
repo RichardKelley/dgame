@@ -209,8 +209,6 @@ class dgame_c{
    
     void get_response_trajectory(p2vertex_t& p2v, trajectory& t2)
     {
-      t2.clear();
-
       p2.frrts.get_trajectory_root(p2v, t2);
       bvertex_t* nearest_vertex;
       if(!p2.brrts.get_nearest_vertex(p2v.state, nearest_vertex))
@@ -338,12 +336,14 @@ class dgame_c{
       else
         p1bv = p1.get_best_vertex();
       calculate_best_response(*p1bv);
+      p1bv->cost_from_root.print(cout, "p1: ", " ");
       
       p1.frrts.get_trajectory_root(*p1bv, t1);
       br = p1bv->best_response;
       if(br)
       {
-        br->cost_from_root.print(cout, "br: ", "\n");
+        cost_t cost_t1 = br->cost_from_root + p2.get_cost_to_goal(br);
+        cost_t1.print(cout, "br: ", "\n");
         get_response_trajectory(*br,t2);
       }
     }
@@ -355,12 +355,13 @@ class dgame_c{
         p1.frrts.plot_tree();
         p2.frrts.plot_tree();
       }
+      /*
       if(p1.frrts.lower_bound_vertex)
         p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "p1: ", " ");
       if(p2.frrts.lower_bound_vertex)
         p2.frrts.lower_bound_vertex->cost_from_root.print(cout, "p2: ", " ");
       cout<<endl;
-
+      */
 #if 1
       trajectory t1, t2;
       get_best_trajectories(t1, t2);

@@ -47,7 +47,8 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       return 0;
     }
     
-    int insert_rules(vector< pair<size_t, automaton_ss_c> >& psi){
+    int insert_rules(vector< pair<size_t, automaton_ss_c> >& psi)
+    {
       for(auto& p : psi)
         abar.insert(p.first, p.second);
       return 0;
@@ -55,7 +56,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     
     bool is_state_in_correct_direction(const state& s, const region_t& r)
     {
-      return (s[2]*r.c[2]) + (s[3]*r.c[3]) > 0;
+      return (s[2]*r.c[2] + s[3]*r.c[3]) > 0;
     }
     
     label_c get_state_label(const state& s)
@@ -106,6 +107,36 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       timed_word_c tw = get_timed_word(li, lf, dt);
       extend_cost = abar.get_cost(tw);
       return 0;
+    }
+    
+    bool is_safe_trajectory(const trajectory& traj)
+    {
+      if(traj.states.empty())
+        return true;
+
+      int drop_counter=0;
+      label_c current_label = get_state_label(traj.states[0]);
+      int num_changed = 0;
+      for(auto& s : traj.states)
+      {
+        if(!drop_counter)
+        {
+          label_c label_t1 = get_state_label(s);
+          if(label_t1 != current_label)
+          {
+            num_changed++;
+            current_label = label_t1;
+          }
+
+          if((num_changed > 1) || is_in_collision(s))
+            return false;
+          
+        }
+        drop_counter++;
+        if(drop_counter == 25)
+          drop_counter = 0;
+      }
+      return true;
     }
     
     int evaluate_extend_cost(const state& si, const state& sf,
