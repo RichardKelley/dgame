@@ -66,7 +66,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     
     bool is_state_in_correct_direction(const state& s, const region_t& r)
     {
-      return (s[2]*r.dir[0] + s[3]*r.dir[1]) > 0;
+      return (s[0]*r.dir[0] + s[1]*r.dir[1]) > 0;
     }
     
     label_c get_state_label(const state& s)
@@ -78,13 +78,6 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
         if(r.is_inside(s))
         {
           l.insert(r.label);
-          if(r.label[LEFT_LANE] || r.label[RIGHT_LANE])
-          {
-            if(is_state_in_correct_direction(s, r))
-              l.insert(GOOD_DIR);
-            else
-              l.remove(GOOD_DIR);
-          }
           break;      // assume regions are disjoint
         }
       }
@@ -93,12 +86,24 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       return l;
     }
     
-    timed_word_c get_timed_word(const label_c& l1, const label_c& l2, float dt)
+    timed_word_c get_timed_word(const state& si, const state& sf, const label_c& l1, const label_c& l2, float dt)
     {
       label_c lt;
 
       if(l2[SIDEWALK])
         lt.insert(SIDEWALK);
+ 
+      for(auto& r : labeled_regions)
+      {
+        if(r.is_inside(sf))
+        {
+          state ds = sf-si;
+          if(is_state_in_correct_direction(ds, r))
+            lt.insert(GOOD_DIR);
+          else
+            lt.remove(GOOD_DIR);
+        }
+      }
       
       if(l2[GOOD_DIR])
         lt.insert(GOOD_DIR);
@@ -123,7 +128,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     {
       label_c li = get_state_label(si); 
       label_c lf = get_state_label(sf);
-      timed_word_c tw = get_timed_word(li, lf, dt);
+      timed_word_c tw = get_timed_word(si, sf, li, lf, dt);
       //tw.print();
       extend_cost = abar.get_cost(tw);
       return 0;

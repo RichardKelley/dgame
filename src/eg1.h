@@ -165,7 +165,7 @@ void example2()
   bot_lcmgl_t* lcmgl  = bot_lcmgl_init(lcm, "plotter");
   bot_lcmgl_switch_buffer(lcmgl);
 
-  float w = 3;
+  float w = 2;
   float epsilon = 0.1;
 
   vector<pair<size_t, automaton_ss_c> > rules;
@@ -196,24 +196,39 @@ void example2()
   float de3[2] = {-1,0};
   float de4[2] = {0,-1};
 
-  float rh[2] = {0,-w/4};
-  float lh[2] = {0,w/4};
+  float rcrd[2] = {w/4, -w};
+  float rcru[2] = {w/4, w};
+  float rcld[2] = {-w/4, -w};
+  float rclu[2] = {-w/4, w};
 
-  float rv[2] = {w/4,0};
-  float lv[2] = {-w/4,0};
+  float rcswrd[2] = {w,-w};
+  float rcswru[2] = {w,-w};
+  float rcswld[2] = {-w,-w};
+  float rcswlu[2] = {-w,-w};
 
-  float sh[2] = {3*w, w/2};
-  float sv[2] = {w/2, 3*w};
+  float rcrr[2] = {w, -w/4};
+  float rcrl[2] = {-w, w/4};
+  float rclr[2] = {w, w/4};
+  float rcll[2] = {-w, -w/4};
+
+  float rsx[2] = {w, w/2};
+  float rsy[2] = {w/2, w};
+
+  float rssw[2] = {w,w};
 
   label_c right_lane(RIGHT_LANE);
   label_c left_lane(LEFT_LANE);
   label_c sidewalk(SIDEWALK);
 
-  regions.push_back(region(rh, sh, de1, right_lane));
-  regions.push_back(region(rv, sv, de2, right_lane));
-  
-  regions.push_back(region(lh, sh, de3, left_lane));
-  regions.push_back(region(lv, sv, de4, left_lane));
+  regions.push_back(region(rcrd, rsy, de2, right_lane));
+  regions.push_back(region(rcru, rsy, de2, right_lane));
+  regions.push_back(region(rcld, rsy, de4, left_lane));
+  regions.push_back(region(rclu, rsy, de4, left_lane));
+
+  regions.push_back(region(rcrr, rsx, de1, right_lane));
+  regions.push_back(region(rcrl, rsx, de1, right_lane));
+  regions.push_back(region(rclr, rsx, de3, left_lane));
+  regions.push_back(region(rcll, rsx, de3, left_lane));
 
   dgame_c<system_t> dgame(lcmgl);
   dgame.insert_rules(rules);

@@ -21,14 +21,9 @@ class label_c{
     void insert(const label_c& l){
       s = s | l.s;
     }
-    void remove(const label_c& l){
-      s = s ^ l.s;
-    }
     void remove(const size_t w){
-      s = s ^ (1<<w);
-    }
-    label_c minus(const label_c& l) const{
-      return label_c(s ^ l.s);
+      if(!!(s & (1<< w)))
+        s = s ^ (1<<w);
     }
     label_c intersect(const label_c& l) const{
       return label_c(s & l.s);
