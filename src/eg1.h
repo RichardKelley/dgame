@@ -145,3 +145,59 @@ void example1()
   return;
 }
 
+void example2()
+{
+  //typedef mvsystem_c<double_integrator_c, mvmap_c<4>, mvregion_c<4>, cost_c<1>, automaton_product_c<-1> > system_t;
+  typedef mvsystem_c<single_integrator_c<2>, mvmap_c<2>, mvregion_c<2>, cost_c<1>, automaton_product_c<-1> > system_t;
+  typedef system_t::state state;
+  typedef typename system_t::control control;
+  typedef typename system_t::trajectory trajectory;
+  typedef typename system_t::region_t region;
+  
+  lcm_t* lcm          = bot_lcm_get_global(NULL);
+  bot_lcmgl_t* lcmgl  = bot_lcmgl_init(lcm, "plotter");
+  bot_lcmgl_switch_buffer(lcmgl);
+  
+  float w = 5;
+  float maxv = 1;
+  float nomv = 0.5;
+  float epsilon = 0.2;
+
+  float zero[2] = {0};
+  float size[2] = {2*w,2*w};
+  region op_region = region(zero, size);
+  
+  float sc1[2] = {w,-w};
+  float gc1[2] = {-w,w};
+  float gs[2] = {0.2,0.2};
+  
+  float sc2[2] = {-w,-w};
+  float gc2[2] = {w, w};
+  
+  region gr1 = region(gc1, gs);
+  region gr2 = region(gc2, gs);
+  region sr1 = region(sc1, gs);
+  region sr2 = region(sc2, gs);
+
+  vector<region> regions;
+  vector<pair<size_t, automaton_ss_c> > rules;
+
+  dgame_c<system_t> dgame(lcmgl);
+  dgame.insert_rules(rules);
+  dgame.initialize(op_region, sr1, gr1, sr2, gr2, regions);
+  
+  for(auto i : range(0, 1000))
+  {
+    dgame.iteration();
+    if(i%100 == 0)
+    {
+      dgame.draw();
+      //getchar();
+    }
+    if(i%10 == 0)
+      cout<<i<<endl;
+  }
+  dgame.draw();
+
+  return;
+}
