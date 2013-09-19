@@ -66,35 +66,31 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     
     bool is_state_in_correct_direction(const state& s, const region_t& r)
     {
-      float unit_vector[2] = {cos(s[3]), sin(s[3])};
+      float unit_vector[2] = {cos(s[2]), sin(s[2])};
       return (unit_vector[0]*r.dir[0] + unit_vector[1]*r.dir[1]) > 0;
     }
     
     label_c get_state_label(const state& s)
     {
       label_c l;
+      
       l.insert(GOOD_DIR);
       for(auto& r : labeled_regions)
       {
         if(r.is_inside(s))
-          l.insert(r.label);
-      }
-      for(auto& r : labeled_regions)
-      {
-        if(!(l[LEFT_LANE] && l[RIGHT_LANE]))
         {
-          if(r.is_inside(s))
+          l.insert(r.label);
+          if(!(l[LEFT_LANE] && l[RIGHT_LANE]))
           {
             if(is_state_in_correct_direction(s, r))
               l.insert(GOOD_DIR);
             else
               l.remove(GOOD_DIR);
-            break;
           }
         }
       }
 
-      if(sqrt(s[2]*s[2] + s[3]*s[3]) < 0.5)
+      if(s[3] < 0.45)
         l.insert(SLOW);
       return l;
     }
@@ -145,7 +141,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       int num_changed = 0;
       for(auto& s : traj.states)
       {
-        if(!drop_counter)
+        if(drop_counter % 5 == 0)
         {
           label_c label_t1 = get_state_label(s);
           if(label_t1 != current_label)
@@ -159,8 +155,6 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
           
         }
         drop_counter++;
-        if(drop_counter == 1)
-          drop_counter = 0;
       }
       return true;
     }

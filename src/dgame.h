@@ -224,7 +224,7 @@ class dgame_c{
       }
     }
 
-    bool check_collision_trajectory(const trajectory& t1, const p1vertex_t& p1v, p2vertex_t& p2v)
+    bool check_collision_trajectory(const trajectory& t1, p2vertex_t& p2v)
     {
       trajectory t2;
       get_response_trajectory(p2v, t2);
@@ -257,7 +257,7 @@ class dgame_c{
       for(auto& p2brm : p2.best_response_map)
       {
         auto pv = p2brm.second;
-        if(!check_collision_trajectory(t1, v, *pv))
+        if(!check_collision_trajectory(t1, *pv))
         {
           cost_t t2 = pv->cost_from_root + p2.get_cost_to_goal(pv);
           if(t2 < best_cost)
@@ -294,7 +294,7 @@ class dgame_c{
       p1.frrts.get_trajectory_root(*p1bv, t1);
       
       set<p2vertex_t*> p2f_rewired_vertices;
-      p2.frrts.iteration();
+      p2.frrts.iteration(NULL, &p2f_rewired_vertices, &t1, obstacle_size);
       p2vertex_t* p2l = p2.frrts.last_added_vertex;
       if(p2l)
       {

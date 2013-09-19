@@ -283,7 +283,8 @@ void example3()
   vector<pair<size_t, automaton_ss_c> > rules;
   rules.push_back( make_pair(0, automaton_ss_c(false, SIDEWALK, 1, 0)));
   rules.push_back( make_pair(1, automaton_ss_c(true, GOOD_DIR, 1, 0)));
-  rules.push_back( make_pair(2, automaton_ss_c(false, LANE_CHANGE, 0, 1)));
+  //rules.push_back( make_pair(1, automaton_ss_c(false, LANE_CHANGE, 0, 10)));
+  rules.push_back( make_pair(2, automaton_ss_c(false, SLOW, 1, 0)));
   
   float zero[4] = {0};
   float size[4] = {3*w,3*w, 2*M_PI, 2*vmax};
@@ -338,9 +339,9 @@ void example3()
   regions.push_back(region(rclu, rsy, de4, left_lane));
 
   regions.push_back(region(rcrr, rsx, de1, right_lane));
-  regions.push_back(region(rcrl, rsx, de1, right_lane));
+  regions.push_back(region(rcrl, rsx, de3, right_lane));
   regions.push_back(region(rclr, rsx, de3, left_lane));
-  regions.push_back(region(rcll, rsx, de3, left_lane));
+  regions.push_back(region(rcll, rsx, de1, left_lane));
 
   dgame_c<system_t> dgame(lcmgl);
   dgame.insert_rules(rules);
@@ -366,7 +367,7 @@ void example3()
     if(i%100 == 0)
     {
       cout<<i<<endl;
-      dgame.draw();
+      dgame.draw(i);
       getchar();
     }
   }
