@@ -6,7 +6,8 @@ int main()
 {
   //srand(time(NULL));
 
-  example1(); 
-  //example2(); 
+  //example1(); 
+  //example2();
+  example3();
   return 0;
 }

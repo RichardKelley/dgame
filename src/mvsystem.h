@@ -66,7 +66,8 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     
     bool is_state_in_correct_direction(const state& s, const region_t& r)
     {
-      return (s[0]*r.dir[0] + s[1]*r.dir[1]) > 0;
+      float unit_vector[2] = {cos(s[3]), sin(s[3])};
+      return (unit_vector[0]*r.dir[0] + unit_vector[1]*r.dir[1]) > 0;
     }
     
     label_c get_state_label(const state& s)
@@ -76,11 +77,23 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       for(auto& r : labeled_regions)
       {
         if(r.is_inside(s))
-        {
           l.insert(r.label);
-          break;      // assume regions are disjoint
+      }
+      for(auto& r : labeled_regions)
+      {
+        if(!(l[LEFT_LANE] && l[RIGHT_LANE]))
+        {
+          if(r.is_inside(s))
+          {
+            if(is_state_in_correct_direction(s, r))
+              l.insert(GOOD_DIR);
+            else
+              l.remove(GOOD_DIR);
+            break;
+          }
         }
       }
+
       if(sqrt(s[2]*s[2] + s[3]*s[3]) < 0.5)
         l.insert(SLOW);
       return l;
@@ -93,18 +106,6 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       if(l2[SIDEWALK])
         lt.insert(SIDEWALK);
  
-      for(auto& r : labeled_regions)
-      {
-        if(r.is_inside(sf))
-        {
-          state ds = sf-si;
-          if(is_state_in_correct_direction(ds, r))
-            lt.insert(GOOD_DIR);
-          else
-            lt.remove(GOOD_DIR);
-        }
-      }
-      
       if(l2[GOOD_DIR])
         lt.insert(GOOD_DIR);
 
