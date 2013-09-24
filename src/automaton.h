@@ -40,6 +40,9 @@ class label_c{
     bool operator!=(label_c& l){
       return (s != l.s);
     }
+    bool operator==(label_c& l){
+      return s == l.s;
+    }
     void print(){
       for(int i=7; i>=0; i--)
         cout<< !!(s & (1<<i));

@@ -20,17 +20,29 @@ class mvregion_c : public region_c<N>{
       dir[0] = 0;
       dir[1] = 0;
     }
-    mvregion_c(const float* cin, const float* sin, const float* dir_in, const label_c l_in) : region_c<N>(cin, sin)
+    mvregion_c(const float* cin, const float* sin, const float* dir_in, const label_c l_in, const float* color=NULL) : region_c<N>(cin, sin, color)
     {
       label = l_in;
       dir[0] = dir_in[0];
       dir[1] = dir_in[1];
     }
-    mvregion_c(const float* cin, const float* sin) : region_c<N>(cin, sin)
+    mvregion_c(const double* cin, const double* sin, const double* dir_in, const label_c l_in, const double* color=NULL) : region_c<N>(cin, sin, color)
+    {
+      label = l_in;
+      dir[0] = dir_in[0];
+      dir[1] = dir_in[1];
+    }
+    mvregion_c(const float* cin, const float* sin, const float* color=NULL) : region_c<N>(cin, sin, color)
     {
       dir[0] = 0;
       dir[1] = 0;
     }
+    mvregion_c(const double* cin, const double* sin, const double* color=NULL) : region_c<N>(cin, sin, color)
+    {
+      dir[0] = 0;
+      dir[1] = 0;
+    }
+
 };
 
 template<class dynamical_system_tt, class map_tt, class region_tt, class cost_tt, class automaton_product_t>
@@ -80,13 +92,10 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
         if(r.is_inside(s))
         {
           l.insert(r.label);
-          if(!(l[LEFT_LANE] && l[RIGHT_LANE]))
-          {
-            if(is_state_in_correct_direction(s, r))
-              l.insert(GOOD_DIR);
-            else
-              l.remove(GOOD_DIR);
-          }
+          if(is_state_in_correct_direction(s, r))
+            l.insert(GOOD_DIR);
+          else
+            l.remove(GOOD_DIR);
         }
       }
 
@@ -105,13 +114,10 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       if(l2[GOOD_DIR])
         lt.insert(GOOD_DIR);
 
-      if(!( (l1[LEFT_LANE] && l1[RIGHT_LANE]) ||
-            (l2[LEFT_LANE] && l2[RIGHT_LANE])))
+      if( (l1[LEFT_LANE] && l2[RIGHT_LANE]) || 
+          (l2[LEFT_LANE] && l1[RIGHT_LANE]) )
       {
-
-        if( (l1[LEFT_LANE] && l2[RIGHT_LANE]) || 
-            (l2[LEFT_LANE] && l1[RIGHT_LANE]) )
-          lt.insert(LANE_CHANGE);
+        lt.insert(LANE_CHANGE);
       }
       
       if(l2[SLOW])
