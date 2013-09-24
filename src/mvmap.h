@@ -15,7 +15,7 @@ class mvmap_c : public map_c<N>
     {
       for(auto& r : obstacles)
       {
-        if(r.is_inside(s))
+        if(r.is_inside(s, true))
         {
           //cout<<"returning true"<<endl;
           return true;

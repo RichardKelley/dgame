@@ -80,7 +80,7 @@ class birrts_c
     {
       frrts.system.operating_region = op_region;
       frrts.system.goal_region = g1;
-      frrts.goal_sample_freq = 0.1;
+      frrts.goal_sample_freq = 0.25;
       frrts.system.insert_regions(regions);
       frrts.initialize(state(s1.c));
       frrts.do_branch_and_bound = do_branch_and_bound;
@@ -198,7 +198,8 @@ class dgame_c{
       float p2lc[4] = {0,0,0,0.5};
       float p2blc[4] = {0,1,0,0.9};
       p2.set_points_color(p2pc, 4);
-      p2.set_lines_color(p2lc, 1.5);
+      p2.set_lines_color(p2lc, 2);
+      p1.set_lines_color(p1.frrts.lines_color, 2);
       p2.set_best_lines_color(p2blc,4);
     }
 
@@ -227,7 +228,7 @@ class dgame_c{
         vector<region_t>& regions)
     {
       p1.initialize(op_region, s1, g1, regions);
-      p2.initialize(op_region, s2, g2, regions, false);
+      p2.initialize(op_region, s2, g2, regions);
     }
    
     void get_response_trajectory(p2vertex_t& p2v, trajectory& t2)
@@ -318,14 +319,25 @@ class dgame_c{
     void delete_colliding_vertices(p2vertex_t* pv, trajectory& t1)
     {
       trajectory t2;
-      for(auto& pvc : pv->children)
+      auto pvci = pv->children.begin();
+      while(pvci != pv->children.end())
       {
+        p2vertex_t* pvc = static_cast<p2vertex_t*>(*pvci);
+
         p2.frrts.system.extend_to(pv->state, pvc->state, 
             false, t2, pvc->edge_from_parent->opt_data);
         t2.t0 = pv->t0;
 
         if(p2.frrts.check_collision_trajectory(t1, t2, obstacle_size))
-          p2.frrts.delete_downstream(*(static_cast<p2vertex_t*>(pvc)));
+        {
+          p2.frrts.delete_downstream(*pvc);
+          pv->children.erase(pvci++);
+        }
+        else
+        {
+          delete_colliding_vertices(pvc, t1);
+          ++pvci;
+        }
       }
     }
     
@@ -356,6 +368,7 @@ class dgame_c{
       if(p1bv)
       {
         delete_colliding_vertices(p2.frrts.root, t1);
+        p2.frrts.update_all_costs();
         p2.update_best_response_map();
       }
     }
@@ -369,8 +382,6 @@ class dgame_c{
       if(p1.frrts.lower_bound_vertex)
       {
         p1bv = p1.frrts.lower_bound_vertex;
-
-        p1bv->cost_from_root.print(cout, "p1: ", " ");
         p1.frrts.get_trajectory_root(*p1bv, t1);
 
         calculate_best_response(*p1bv);
@@ -378,7 +389,7 @@ class dgame_c{
         if(br)
         {
           cost_t cost_t1 = br->cost_from_root;
-          cost_t1.print(cout, "br: ", "\n");
+          cost_t1.print(cout, "\tbr: ", "\n");
           get_response_trajectory(*br,t2);
         }
       }
@@ -411,30 +422,33 @@ class dgame_c{
     {
       if(iter < 500)
       {
-        p1.frrts.plot_tree();
+        //p1.frrts.plot_tree();
         p2.frrts.plot_tree();
       }
-      /*
       cout<<"lb cost:"<<endl;
       if(p1.frrts.lower_bound_vertex)
         p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "\tp1: ", "--");
       if(p2.frrts.lower_bound_vertex)
         p2.frrts.lower_bound_vertex->cost_from_root.print(cout, "\tp2: ", "\n");
       cout<<endl;
-      */
 
       trajectory t1, t2;
       get_best_trajectories(t1, t2);
       p1.frrts.plot_trajectory(t1, p1.frrts.best_lines_color, p1.frrts.best_lines_width); 
       p2.frrts.plot_trajectory(t2, p2.frrts.best_lines_color, p2.frrts.best_lines_width); 
 #if 1
+      int index = 0;
+      if(iter > 1000)
+      {
+        index = 400;
+      }
       bot_core_pose_t pose;
       if(t1.states.size())
-        create_pose_from_state(t1.states[0].x, pose);
+        create_pose_from_state(t1.states[index].x, pose);
       bot_core_pose_t_publish(lcm, "POSE1", &pose);
-      
+
       if(t2.states.size())
-        create_pose_from_state(t2.states[0].x, pose);
+        create_pose_from_state(t2.states[index].x, pose);
       bot_core_pose_t_publish(lcm, "POSE2", &pose);
 #endif
     }

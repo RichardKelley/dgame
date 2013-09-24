@@ -1,6 +1,6 @@
 #include "dgame.h"
 
-void example2()
+void example3()
 {
   typedef mvsystem_c< dubins_velocity_c, mvmap_c<4>, mvregion_c<4>, cost_c<4>, automaton_product_c<2> > system_t;
   typedef system_t::state state;
@@ -32,7 +32,7 @@ void example2()
   double gs[4] = {0.5, 0.5, 10*M_PI/180.0, 0.5};
   double gsplot[4] = {1, 1, 10*M_PI/180.0, 0.1};
 
-  double sc2[4] = {-w/4, 3*w-w/8, -M_PI/2, nomv};
+  double sc2[4] = {-w/4, 1.5*w, -M_PI/2, nomv};
   double gc2[4] = {-w/4, -2*w, -M_PI/2, nomv};
 
   region gr1 = region(gc1, gs, red);
@@ -132,7 +132,7 @@ void example2()
     dgame.iteration();
     if(i% 100 == 0)
     {
-      dgame.draw_tree();
+      dgame.draw_tree(i);
       draw_all();
       bot_lcmgl_switch_buffer(lcmgl);
       

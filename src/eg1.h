@@ -8,7 +8,6 @@ double ddgrey[4] = {0,0,0,0.8};
 double yellow[4] = {1,1,0,0.5};
 double green[4] = {0,1,0,0.2};
 
-
 void example1()
 {
   typedef mvsystem_c< dubins_velocity_c, mvmap_c<4>, mvregion_c<4>, cost_c<4>, automaton_product_c<2> > system_t;
@@ -38,7 +37,7 @@ void example1()
 
   double sc1[4] = {w/4,-5*w/2, 0.5*M_PI, nomv};
   double gc1[4] = {-5*w/2,w/4, -M_PI, nomv};
-  double gs[4] = {0.1, 0.1, 10*M_PI/180.0, 0.1};
+  double gs[4] = {1, 1, 10*M_PI/180.0, 0.1};
   double gsplot[4] = {1, 1, 10*M_PI/180.0, 0.1};
 
   double sc2[4] = {-5*w/2,-w/4, 0, nomv};
@@ -163,6 +162,7 @@ void example1()
       if( (r.label == sidewalk))
         dgame.p1.frrts.plot_region(r,2);
     }
+    
     region gr1p = region(gc1, gsplot, red);
     region gr2p = region(gc2, gsplot, green);
     bot_lcmgl_enable(lcmgl, GL_BLEND); 
@@ -182,15 +182,17 @@ void example1()
   for(auto i : range(0, 5000))
   {
     dgame.iteration();
-    if(i%500 == 0)
+    if(i% 100 == 0)
     {
-      cout<<i<<endl;
-      dgame.draw_tree();
+      dgame.draw_tree(2000);
       draw_all();
       bot_lcmgl_switch_buffer(lcmgl);
-      //getchar();
+      
+      cout<<"i: "<< i << endl;
+      getchar();
     }
   }
+
   dgame.draw_tree(1000);
   draw_all();
   bot_lcmgl_switch_buffer(lcmgl);

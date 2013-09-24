@@ -53,6 +53,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
     typedef cost_tt cost_t;
     typedef region_tt region_t;
 
+    typedef system_c<dynamical_system_tt, map_tt, region_tt, cost_tt> system_t;
     typedef typename dynamical_system_t::state_t state;
     typedef typename dynamical_system_t::control_t control;
     typedef typename dynamical_system_t::opt_data_t opt_data_t;
@@ -138,6 +139,42 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
       return 0;
     }
     
+    //(x,y,theta,v)
+    bool is_in_collision(const state& s)
+    {
+      return system_t::is_in_collision(s);
+
+      if(system_t::is_in_collision(s))
+        return true;
+      else
+      {
+        float car_width = 2.0, car_length = 2.0, safe_dist=0.2;
+        float cth=cos(s[2]), sth=sin(s[2]);
+        float dx=0.3;
+        float cxm = (car_length+safe_dist)/2, cym = (car_width+safe_dist)/2;
+        float cx = -cxm, cy = -cym;
+
+        while(cy < cym)
+        {
+          cx = -cxm;
+          while(cx < cxm)
+          {
+            float scdata[4] = {s[0] + cx*cth + cy*sth,
+              s[1] + -cx*sth + cy*cth,
+              0, 0};
+            state sc(scdata);
+            if(system_t::is_in_collision(sc))
+              return true;
+
+            cx += dx;
+          }
+          cy += dx;
+        }
+        return false;
+      }
+      return false;
+    }
+
     bool is_safe_trajectory(const trajectory& traj)
     {
       if(traj.states.empty())
