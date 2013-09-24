@@ -96,6 +96,7 @@ class mvsystem_c : public system_c<dynamical_system_tt, map_tt, region_tt, cost_
             l.insert(GOOD_DIR);
           else
             l.remove(GOOD_DIR);
+          break;
         }
       }
 

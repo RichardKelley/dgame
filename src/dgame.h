@@ -3,6 +3,7 @@
 
 #include "mvsystem.h"
 #include <map>
+#include "mvmap.h"
 
 template<class system_tt> class p1vertex_c;
 template<class system_tt> class p2vertex_c;
@@ -201,6 +202,14 @@ class dgame_c{
       p2.frrts.system.obstacle_map.insert_obstacles(obstacles);
       p2.brrts.system.obstacle_map.insert_obstacles(obstacles);
     }
+    
+    void insert_heuristic_regions(vector<region_t>& regions)
+    {
+      p1.frrts.system.heuristic_sampling_regions = regions;
+      p2.frrts.system.heuristic_sampling_regions = regions;
+      p1.brrts.system.heuristic_sampling_regions = regions;
+      p2.brrts.system.heuristic_sampling_regions = regions;
+    }
 
     void initialize(region_t& op_region, region_t& s1, region_t& g1, region_t& s2, region_t& g2, 
         vector<region_t>& regions)
@@ -279,7 +288,8 @@ class dgame_c{
       for(auto& pc : v.children)
         update_best_response_descendents(*(static_cast<p1vertex_t*>(pc)));
     }
-    
+
+#if 0 
     void iteration()
     {
       p1.frrts.iteration();
@@ -329,6 +339,36 @@ class dgame_c{
         calculate_best_response(*(static_cast<p1vertex_t*>(p1l)));
       */
     }
+#else
+    void iteration()
+    {
+      p1.frrts.iteration();
+      p1vertex_t* p1l = p1.frrts.last_added_vertex;
+      
+      trajectory t1;
+      set<p2vertex_t*> p2f_rewired_vertices;
+      p1vertex_t* p1bv;
+      if(p1.frrts.lower_bound_vertex)
+      {
+        p1bv = p1.frrts.lower_bound_vertex;
+        p1.frrts.get_trajectory_root(*p1bv, t1);
+      
+        p2.frrts.iteration(NULL, &p2f_rewired_vertices, &t1, obstacle_size);
+      }
+      else
+      {
+        p2.frrts.iteration(NULL, &p2f_rewired_vertices);
+      }
+
+      p2vertex_t* p2l = p2.frrts.last_added_vertex;
+      if(p2l)
+      {
+        p2.brrts.iteration(&(p2l->state));
+        p2.update_best_response_queue(p2l, p2f_rewired_vertices);
+      }
+      //p2.frrts.iteration();
+    }
+#endif
 
     void get_best_trajectories(trajectory& t1, trajectory& t2)
     {
