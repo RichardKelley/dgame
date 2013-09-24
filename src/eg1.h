@@ -182,10 +182,10 @@ void example1()
   for(auto i : range(0, 5000))
   {
     dgame.iteration();
-    if(i%100 == 0)
+    if(i%500 == 0)
     {
       cout<<i<<endl;
-      dgame.draw_tree(i);
+      dgame.draw_tree();
       draw_all();
       bot_lcmgl_switch_buffer(lcmgl);
       //getchar();
