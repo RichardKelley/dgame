@@ -118,21 +118,31 @@ class birrts_c
       return best_vertex;
     }
 
-    void update_best_response_queue_iter(vertex_tt* pv)
+    void update_best_response_map()
+    {
+      best_response_map.clear();
+      for(auto p2v : frrts.list_vertices)
+        update_best_response_queue_iter(p2v, true);
+    }
+
+    void update_best_response_queue_iter(vertex_tt* pv, bool dont_check_if_exists=false)
     {
       if(!frrts.system.is_in_goal(pv->state))
         return;
 
       cost_t t1 = pv->cost_from_root;
-      auto map_location = best_response_map.end();
-      for(auto it = best_response_map.begin(); it!= best_response_map.end(); it++)
+      if(!dont_check_if_exists)
       {
-        if(it->second == pv)
-          map_location = it;
+        auto map_location = best_response_map.end();
+        for(auto it = best_response_map.begin(); it!= best_response_map.end(); it++)
+        {
+          if(it->second == pv)
+            map_location = it;
+        }
+
+        if(map_location != best_response_map.end())
+          best_response_map.erase(map_location);
       }
-      
-      if(map_location != best_response_map.end())
-        best_response_map.erase(map_location);
       best_response_map.insert(make_pair(t1, pv));
       
       //if(best_response_map.size() > 10)
@@ -346,6 +356,7 @@ class dgame_c{
       if(p1bv)
       {
         delete_colliding_vertices(p2.frrts.root, t1);
+        p2.update_best_response_map();
       }
     }
 #endif
@@ -356,18 +367,20 @@ class dgame_c{
       p1vertex_t* p1bv = p1.frrts.root;
 
       if(p1.frrts.lower_bound_vertex)
-        p1bv = p1.frrts.lower_bound_vertex;
-      
-      p1bv->cost_from_root.print(cout, "p1: ", " ");
-      p1.frrts.get_trajectory_root(*p1bv, t1);
-
-      calculate_best_response(*p1bv);
-      br = p1bv->best_response;
-      if(br)
       {
-        cost_t cost_t1 = br->cost_from_root;
-        cost_t1.print(cout, "br: ", "\n");
-        get_response_trajectory(*br,t2);
+        p1bv = p1.frrts.lower_bound_vertex;
+
+        p1bv->cost_from_root.print(cout, "p1: ", " ");
+        p1.frrts.get_trajectory_root(*p1bv, t1);
+
+        calculate_best_response(*p1bv);
+        br = p1bv->best_response;
+        if(br)
+        {
+          cost_t cost_t1 = br->cost_from_root;
+          cost_t1.print(cout, "br: ", "\n");
+          get_response_trajectory(*br,t2);
+        }
       }
     }
 
@@ -401,11 +414,14 @@ class dgame_c{
         p1.frrts.plot_tree();
         p2.frrts.plot_tree();
       }
+      /*
       cout<<"lb cost:"<<endl;
       if(p1.frrts.lower_bound_vertex)
-        p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "p1: ", "\n");
+        p1.frrts.lower_bound_vertex->cost_from_root.print(cout, "\tp1: ", "--");
       if(p2.frrts.lower_bound_vertex)
-        p2.frrts.lower_bound_vertex->cost_from_root.print(cout, "p2: ", "\n");
+        p2.frrts.lower_bound_vertex->cost_from_root.print(cout, "\tp2: ", "\n");
+      cout<<endl;
+      */
 
       trajectory t1, t2;
       get_best_trajectories(t1, t2);
